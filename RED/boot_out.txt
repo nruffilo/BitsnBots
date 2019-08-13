@@ -1,0 +1,1 @@
+Adafruit CircuitPython 4.0.0-beta.2 on 2019-02-05; Adafruit CircuitPlayground Express with Crickit libraries with samd21g18
