@@ -139,8 +139,8 @@ void loop() {
   theaterChaseRainbow(50);
   */
   
-  int currentButtonValue = analogRead(A0);
-  if (priorButtonValue > 400 && currentButtonValue < 10) {
+  int currentButtonValue = digitalRead(A0); //changed to digital read to ensure it worked more consistently
+  if (priorButtonValue == 1 && currentButtonValue == 0) {
     //button pressed, change mode
     mode++;
     strips[0].fill((0,0,0));
