@@ -3,8 +3,9 @@ import board
 import neopixel
 import math
 import busio
-import audiobusio
-import adafruit_pcf8523
+import digitalio
+import analogio
+import adafruit_ds3231
 import ulab
 import ulab.fft
 import ulab.vector
@@ -14,20 +15,29 @@ from adafruit_led_animation.animation.rainbowsparkle import RainbowSparkle
 from adafruit_led_animation.color import WHITE
 
 pixel_pin = board.D11
-
+button = digitalio.DigitalInOut(board.D2)
+button.direction = digitalio.Direction.INPUT
+button.pull = digitalio.Pull.UP
 # The number of NeoPixels
 num_pixels = 100
 
 #load the mic
-mic = audiobusio.PDMIn(board.MICROPHONE_CLOCK, board.MICROPHONE_DATA,
-                       sample_rate=16000, bit_depth=16)
+#mic = audiobusio.PDMIn(board.A1, board.A2,sample_rate=16000, bit_depth=16)
+#samples_bit = array.array('H', [0] * (fft_size+3))
+mic = analogio.AnalogIn(board.A3)
 
-print("about to load i2c")
+
 #initialize the i2c
 #SCL = A5
 #SDA = A4
-#myI2C = busio.I2C(board.a5, board.a4)
-#rtc = adafruit_pcf8523.PCF8523(myI2C)
+myI2C = busio.I2C(board.SCL, board.SDA)
+rtc = adafruit_ds3231.DS3231(myI2C)
+
+#r = rtc.RTC()
+#rtc.datetime = time.struct_time((2021, 02, 20, 17, 50, 15, 0, -1, -1))
+print("Current Time: ")
+current_time = rtc.datetime
+#print(current_time)
 
 #rtc = adafruit_ds3231.DS3231(myI2C)
 
@@ -64,11 +74,12 @@ column = 0
 row = 0
 sep_on = True
 #rtc.datetime = time.struct_time((2017,1,9,15,6,0,0,9,-1))
+mode = 2
 
-print("everything loaded")
-while True:
-'''
-pixels.fill((0,0,0))
+def displayClock():
+    pixels.fill((0,0,0))
+    global sep_on
+    global grid
     if sep_on:
         pixels[grid[4][3]] = (255,255,255)
         pixels[grid[4][6]] = (255,255,255)
@@ -78,19 +89,13 @@ pixels.fill((0,0,0))
         pixels[grid[5][6]] = (255,255,255)
         sep_on = True
         
-#   t = rtc.datetime
-#   tens_hour = math.floor(t.tm_hour/10)
-#   ones_hour = t.tm_hour%10
+    t = rtc.datetime
+    tens_hour = math.floor(t.tm_hour/10)
+    ones_hour = t.tm_hour%10
     
-#   tens_min = math.floor(t.tm_min/10)
-#   ones_min = t.tm_min%10
- 
-    tens_hour = 1
-    ones_hour = 5
-    
-    tens_min = 3
-    ones_min = 9
-    
+    tens_min = math.floor(t.tm_min/10)
+    ones_min = t.tm_min%10
+     
     #display on the hour/mins
     for i in range(tens_hour):
         pixels[grid[0][i]] = (255,255,255)
@@ -110,7 +115,26 @@ pixels.fill((0,0,0))
     
     pixels.show()
     time.sleep(.5)
-'''
+
+def displayAudio():
+    pixels.fill((0,0,0))
+    print(mic.value)
+    time.sleep(.01)
+    
+while True:
+    if mode == 1:
+        displayClock()
+    
+    if mode == 2:
+        displayAudio()
+        
+    if button.value == False:
+        print("Button pressed")
+        mode = mode + 1
+        if mode > 2:
+            mode = 1
+        time.sleep(3)
+
 '''
     counter=counter+1
     pixels.fill((0,0,0))
