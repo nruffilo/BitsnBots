@@ -24,7 +24,7 @@
 // rotation value (0-3) for that eye.
 
 eyeInfo_t eyeInfo[] = {
-  { 21, 2 }, // SINGLE EYE display-select and wink pins, rotate 180
+  { 20, 2 }, // SINGLE EYE display-select and wink pins, rotate 180
 };
 
 // DISPLAY HARDWARE SETTINGS (screen type & connections) -------------------
