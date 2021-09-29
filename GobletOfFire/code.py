@@ -18,17 +18,29 @@ HID.direction = Direction.INPUT
 
 pixels = neopixel.NeoPixel(board.GP21, pixelCount, brightness = .6, auto_write=False)
 
-wave_file = open("harrypotter.wav", "rb")
-wave = audiocore.WaveFile(wave_file)
+wave_file_selected = open("ContestantSelected.wav", "rb")
+wave_selected = audiocore.WaveFile(wave_file_selected)
+
+wave_file_approaches = open("ContestantApproaches.wav", "rb")
+wave_approaches = audiocore.WaveFile(wave_file_approaches)
+
 
 #audio = audiobusio.I2SOut(bit_clock=board.GP10, word_select=board.GP11, data=board.GP9)
 
-flameColors = [
+flameColorsRed = [
     (0,0,0),
     (51,0,0), (102,0,0), (153, 0,0), (204,0,0), (255,0,0),
     (255,51,0), (255,102,0), (255,153,0), (255,204,0) , (255,255,0),
     (255,255,51), (255,255,102), (255,255,153), (255,255,204), (255,255,255)
 ]
+
+flameColorsBlue = [
+    (0,0,0),
+    (0,0,51), (0,0,102), (0,0,153), (0,0,204), (0,0,255),
+    (0,51,255), (0, 102,255), (0,153,255), (0,204,255) , (0,255,255),
+    (51,255,255), (102,255,255), (153,255,255), (204,255,255), (255,255,255)
+]
+
 
 pixels.fill((0,0,0))
 
@@ -41,19 +53,11 @@ def drawFlame(fv):
     if (flameColor == 1):
         for i in range(pixelCount):
             frame = (((i%3)+(i*2)) + fv)%16
-            pixels[i] = flameColors[frame]
-            #l[T[j+1+j%3]]=HeatColor(qsub8(inoise8((j%3)*20,j*10+a,a/3),abs8((j/3)-2)*51));
-
+            pixels[i] = flameColorsRed[frame]
     else:
-        small = fv/8
-        big = fv*3
-        pixels[0] = (small, small, max((100 + big)%255,75))
-        pixels[1] = (small, small, max((50 + big)%255,75))
-        pixels[2] = (small, small, max((120 + big)%255,75))
-        pixels[3] = (small, small, max((70 + big)%255,75))
-        pixels[4] = (small, small, max((140 + big)%255,75))
-        pixels[5] = (small, small, max((20 + big)%255,75))
-        pixels[6] = (small, small, max((200 + big)%255,75))
+        for i in range(pixelCount):
+            frame = (((i%3)+(i*2)) + fv)%16
+            pixels[i] = flameColorsBlue[frame]
     pixels.show()
 
 
@@ -61,10 +65,10 @@ while True:
     print("Checking HID...")
     print(HID.value)
 
-#    if HID.value == True and flameColor == 1:
-#        flameColor = 2
-#    elif HID.value == False and flameColor == 2:
-#        flameColor = 1
+    if HID.value == True and flameColor == 1:
+        flameColor = 2
+    elif HID.value == False and flameColor == 2:
+        flameColor = 1
 
     drawFlame(flameValue)
     flameValue = flameValue + 1
