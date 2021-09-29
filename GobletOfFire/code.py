@@ -25,7 +25,7 @@ wave_file_approaches = open("ContestantApproaches.wav", "rb")
 wave_approaches = audiocore.WaveFile(wave_file_approaches)
 
 
-#audio = audiobusio.I2SOut(bit_clock=board.GP10, word_select=board.GP11, data=board.GP9)
+audio = audiobusio.I2SOut(bit_clock=board.GP10, word_select=board.GP11, data=board.GP9)
 
 flameColorsRed = [
     (0,0,0),
@@ -60,16 +60,31 @@ def drawFlame(fv):
             pixels[i] = flameColorsBlue[frame]
     pixels.show()
 
+delayCounter = 0
 
 while True:
-    print("Checking HID...")
-    print(HID.value)
+    print("Checking Button...")
+    print(btn.value)
 
-    if HID.value == True and flameColor == 1:
+    if HID.value == True and flameColor == 1 and delayCounter >=600:
         flameColor = 2
+        delayCounter = 0
+        audio.play(wave_approaches)
+        while audio.playing:
+            pass
     elif HID.value == False and flameColor == 2:
         flameColor = 1
+        if delayCounter < 600: delayCounter = delayCounter + 1
 
+    #if the button is pressed
+    if (btn.value == False):
+        flameColor = 2
+        delayCounter = 0
+        audio.play(wave_selected)
+        while audio.playing:
+            pass
+    
+    
     drawFlame(flameValue)
     flameValue = flameValue + 1
     if flameValue > 200:
