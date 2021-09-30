@@ -60,11 +60,14 @@ def drawFlame(fv):
             pixels[i] = flameColorsBlue[frame]
     pixels.show()
 
-delayCounter = 0
+delayCounter = 600
 
 while True:
-    print("Checking Button...")
-    print(btn.value)
+    #print("Checking HID.. ", delayCounter)
+    #print(HID.value)
+
+    while audio.playing:
+        pass
 
     if HID.value == True and flameColor == 1 and delayCounter >=600:
         flameColor = 2
@@ -83,14 +86,13 @@ while True:
         audio.play(wave_selected)
         while audio.playing:
             pass
-    
-    
+
     drawFlame(flameValue)
     flameValue = flameValue + 1
     if flameValue > 200:
         flameValue = 0
     #audio.play(wave)
-    #while audio.playing:
-    #    pass
 
     time.sleep(.05)
+    if (delayCounter < 700):
+        delayCounter = delayCounter + 1
