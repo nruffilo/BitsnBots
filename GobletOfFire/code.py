@@ -24,6 +24,11 @@ wave_selected = audiocore.WaveFile(wave_file_selected)
 wave_file_approaches = open("ContestantApproaches.wav", "rb")
 wave_approaches = audiocore.WaveFile(wave_file_approaches)
 
+wave_file_psst = open("psst.wav", "rb")
+wave_psst = audiocore.WaveFile(wave_file_psst)
+
+wave_file_secret = open("secret.wav", "rb")
+wave_secret = audiocore.WaveFile(wave_file_secret)
 
 audio = audiobusio.I2SOut(bit_clock=board.GP10, word_select=board.GP11, data=board.GP9)
 
@@ -63,36 +68,40 @@ def drawFlame(fv):
 delayCounter = 600
 
 while True:
-    #print("Checking HID.. ", delayCounter)
-    #print(HID.value)
-
-    while audio.playing:
-        pass
-
-    if HID.value == True and flameColor == 1 and delayCounter >=600:
+    #if HID.value == True and flameColor == 1 and delayCounter >=600:
+    if HID.value == True and flameColor == 1 and delayCounter >=300:
         flameColor = 2
         delayCounter = 0
-        audio.play(wave_approaches)
-        while audio.playing:
-            pass
-    elif HID.value == False and flameColor == 2:
+        pixels.fill((0,0,200))
+        pixels.show()
+        audiofiletoplay = random.randint(0,20)
+        if audiofiletoplay == 0:
+            audio.play(wave_psst)
+            time.sleep(5)
+        elif audiofiletoplay == 1:
+            audio.play(wave_secret)
+            time.sleep(5)
+        else:
+            audio.play(wave_approaches)
+            time.sleep(5)
+
+    elif HID.value == False and flameColor == 2 and delayCounter > 100:
         flameColor = 1
-        if delayCounter < 600: delayCounter = delayCounter + 1
+        delayCounter = 0
 
     #if the button is pressed
     if (btn.value == False):
         flameColor = 2
         delayCounter = 0
         audio.play(wave_selected)
-        while audio.playing:
-            pass
+        time.sleep(4)
 
     drawFlame(flameValue)
     flameValue = flameValue + 1
     if flameValue > 200:
         flameValue = 0
-    #audio.play(wave)
 
     time.sleep(.05)
     if (delayCounter < 700):
         delayCounter = delayCounter + 1
+       
