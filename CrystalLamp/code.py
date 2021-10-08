@@ -3,6 +3,8 @@ import neopixel
 import time
 from digitalio import DigitalInOut, Direction, Pull
 import analogio
+import audiobusio
+import audiocore
 import random
 import array
 import math
@@ -18,7 +20,7 @@ from adafruit_led_animation.color import AMBER
 print("loading")
 pixelCount = 51
 
-mic = analogio.AnalogIn(board.GP26)
+mic = audiobusio.PDMIn(board.GP10, board.GP11, sample_rate=16000, bit_depth=16)
 
 btn = DigitalInOut(board.GP9)
 btn.direction = Direction.INPUT
@@ -63,7 +65,7 @@ def volume_color(volume):
 pixels = neopixel.NeoPixel(board.GP3, pixelCount, brightness=.1, auto_write=False)
 
 def soundReactive():
-    readMicSamples()
+    mic.record(samples, len(samples))
     magnitude = normalized_rms(samples)
     # You might want to print this to see the values.
     # print(magnitude)
@@ -91,10 +93,6 @@ def soundReactive():
     elif peak > 0:
         peak = peak - 1
     pixels.show()
-
-def readMicSamples():
-    for i in range(NUM_SAMPLES):
-        samples[i] = mic.value
 
 
 def rainbow_cycle(wait, step):
@@ -143,7 +141,7 @@ comet = Comet(pixels, speed=0.02, color=PURPLE, tail_length=10, bounce=True)
 pulse = Pulse(pixels, speed=0.1, color=AMBER, period=3)
 
 samples = array.array('H', [0] * NUM_SAMPLES)
-readMicSamples()
+mic.record(samples, len(samples))
 
 input_floor = normalized_rms(samples) + 10
 input_ceiling = input_floor + 500
@@ -161,7 +159,7 @@ while True:
             animationMode = animationMode + 1
             step = 0
 
-            if animationMode > 9:
+            if animationMode > 10:
                 animationMode = 1
             
             print("PRESSED!  Animation mode ", animationMode)
@@ -179,8 +177,9 @@ while True:
         bounceAnimation()
     
     if (animationMode == 3):
-        chaseAnimation()
-    
+        soundReactive()
+        time.sleep(0.05)
+        
     if (animationMode == 4):
         pulseAnimation()
         
@@ -209,3 +208,6 @@ while True:
         pixels.show()
         time.sleep(0.1)
         
+    if (animationMode == 10):
+        chaseAnimation()
+
