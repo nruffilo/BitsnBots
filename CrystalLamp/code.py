@@ -20,80 +20,53 @@ from adafruit_led_animation.color import AMBER
 print("loading")
 pixelCount = 51
 
-mic = audiobusio.PDMIn(board.GP10, board.GP11, sample_rate=16000, bit_depth=16)
+#code for meditation light
+breathDirection = 1
+brightness = 0.1
+maxBrightness = .5
+minBrightness = .1
+currentColor = 0
+nextColor = 0
+transitionPercent = 0
+counter = 0
+color = [[255,255,255], [0,200,120], [0,50,220]]
+
+def meditation():
+    global breathDirection, brightness, maxBrightness, minBrightness, currentColor, nextColor, transitionPercent, counter, color
+    pixels.brightness = brightness
+    brightness = brightness + breathDirection/100
+    transitionPercent = transitionPercent + 100/86
+    if (brightness > maxBrightness):
+        breathDirection = -1
+        
+    if (brightness < minBrightness):
+        breathDirection = 1
+        transitionPercent = 0
+        currentColor = currentColor + 1
+        nextColor = currentColor + 1
+        if (currentColor > 2):
+            currentColor = 0
+        if (nextColor > 2):
+            nextColor = 0
+
+    pixels.fill(
+        (
+            color[currentColor][0]*((100-transitionPercent)/100) + color[nextColor][0]*(transitionPercent/100),
+            color[currentColor][1]*((100-transitionPercent)/100) + color[nextColor][1]*(transitionPercent/100),
+            color[currentColor][2]*((100-transitionPercent)/100) + color[nextColor][2]*(transitionPercent/100),
+        )
+        )
+    pixels.brightness = brightness
+    pixels.show()
+    time.sleep(.07)
+    
+mic = audiobusio.PDMIn(clock_pin=board.GP3, data_pin=board.GP2,mono=True, sample_rate=16000, bit_depth=16)
 
 btn = DigitalInOut(board.GP9)
 btn.direction = Direction.INPUT
 btn.pull = Pull.UP
 
-
-#Code for audio
-CURVE = 2
-SCALE_EXPONENT = math.pow(10, CURVE * -0.1)
-
-PEAK_COLOR = (100, 0, 255)
-NUM_SAMPLES = 160
-
-# Restrict value to be between floor and ceiling.
-def constrain(value, floor, ceiling):
-    return max(floor, min(value, ceiling))
-
-# Scale input_value between output_min and output_max, exponentially.
-def log_scale(input_value, input_min, input_max, output_min, output_max):
-    normalized_input_value = (input_value - input_min) / \
-                             (input_max - input_min)
-    return output_min + \
-        math.pow(normalized_input_value, SCALE_EXPONENT) \
-        * (output_max - output_min)
-
-
-# Remove DC bias before computing RMS.
-def normalized_rms(values):
-    minbuf = int(mean(values))
-    samples_sum = sum(
-        float(sample - minbuf) * (sample - minbuf)
-        for sample in values
-    )
-    return math.sqrt(samples_sum / len(values))
-
-def mean(values):
-    return sum(values) / len(values)
-
-def volume_color(volume):
-    return 200, volume * (255 // pixelCount), 0
-
-pixels = neopixel.NeoPixel(board.GP3, pixelCount, brightness=.1, auto_write=False)
-
-def soundReactive():
-    mic.record(samples, len(samples))
-    magnitude = normalized_rms(samples)
-    # You might want to print this to see the values.
-    # print(magnitude)
-    global c, peak
-
-    # Compute scaled logarithmic reading in the range 0 to crownPixelCount
-    c = log_scale(constrain(magnitude, input_floor, input_ceiling),
-                  input_floor, input_ceiling, 0, pixelCount)
-
-    # Light up pixels that are below the scaled and interpolated magnitude.
-    pixels.fill(0)
-    for i in range(pixelCount):
-        if i < c:
-            pixels[i] = volume_color(i)
-        # Light up the peak pixel and animate it slowly dropping.
-        if c >= peak:
-            peak = min(c, pixelCount - 1)
-        elif peak > 0:
-            peak = peak - 1
-        if peak > 0:
-            pixels[int(peak)] = PEAK_COLOR
-
-    if c >= peak:
-        peak = min(c, pixelCount - 1)
-    elif peak > 0:
-        peak = peak - 1
-    pixels.show()
-
+pixels = neopixel.NeoPixel(board.GP5, pixelCount, brightness=.3, auto_write=False)
 
 def rainbow_cycle(wait, step):
     j = step
@@ -124,7 +97,7 @@ def wheel(pos):
         return (0, 255 - pos * 3, pos * 3)
     pos -= 170
     return (pos * 3, 0, 255 - pos * 3)
-    
+
 pressed = False
 animationMode = 1
 step = 0
@@ -140,74 +113,59 @@ chase = Chase(pixels, speed=0.1, color=WHITE, size=3, spacing=6)
 comet = Comet(pixels, speed=0.02, color=PURPLE, tail_length=10, bounce=True)
 pulse = Pulse(pixels, speed=0.1, color=AMBER, period=3)
 
-samples = array.array('H', [0] * NUM_SAMPLES)
-mic.record(samples, len(samples))
-
-input_floor = normalized_rms(samples) + 10
-input_ceiling = input_floor + 500
-peak = 0
 
 while True:
-    '''
-    soundReactive()
-    time.sleep(.05)
-    '''
     if btn.value == False:
         if pressed == False:
-            
+
             pressed = True
             animationMode = animationMode + 1
             step = 0
 
             if animationMode > 10:
                 animationMode = 1
-            
+
             print("PRESSED!  Animation mode ", animationMode)
             time.sleep(0.2)
     else:
         pressed = False
-        
+
     if (animationMode == 1):
         step = step + 1
         if step > 255:
             step = 1
         rainbow_cycle(0.05, step) # Increase the number to slow down the rainbow.
-    
+
     if (animationMode == 2):
         bounceAnimation()
-    
+
     if (animationMode == 3):
-        soundReactive()
-        time.sleep(0.05)
-        
+        meditation()
+
     if (animationMode == 4):
-        pulseAnimation()
-        
-    if (animationMode == 5):
         pixels.fill((60,60,60))
         pixels.show()
         time.sleep(0.1)
 
-    if (animationMode == 6):
+    if (animationMode == 5):
         pixels.fill((100,100,100))
         pixels.show()
         time.sleep(0.1)
 
-    if (animationMode == 7):
+    if (animationMode == 6):
         pixels.fill((160,160,160))
         pixels.show()
         time.sleep(0.1)
-    
-    if (animationMode == 8):
+
+    if (animationMode == 7):
         pixels.fill((240,240,240))
         pixels.show()
         time.sleep(0.1)
-        
-    if (animationMode == 9):
+
+    if (animationMode == 8):
         pixels.fill((0,0,0))
         pixels.show()
         time.sleep(0.1)
-        
-    if (animationMode == 10):
-        chaseAnimation()
 
+    if (animationMode == 9):
+        chaseAnimation()
