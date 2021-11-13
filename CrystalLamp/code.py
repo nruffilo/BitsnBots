@@ -38,7 +38,7 @@ def meditation():
     transitionPercent = transitionPercent + 100/86
     if (brightness > maxBrightness):
         breathDirection = -1
-        
+
     if (brightness < minBrightness):
         breathDirection = 1
         transitionPercent = 0
@@ -59,7 +59,22 @@ def meditation():
     pixels.brightness = brightness
     pixels.show()
     time.sleep(.07)
-    
+
+def runFireAnimation():
+    for i in range(pixelCount):
+        flamePixels[i][0] = flamePixels[i][0] + flamePixels[i][3]
+        flamePixels[i][1] = flamePixels[i][1] + flamePixels[i][3]/5
+        flamePixels[i][2] = flamePixels[i][2] + flamePixels[i][3]/5
+        #if we are over 255 in the red, then assign a new set of random flicker values
+        if (flamePixels[i][0] > 255):
+            flamePixels[i][0] = random.randint(25,100)
+            flamePixels[i][1] = random.randint(2,50)
+            flamePixels[i][2] = random.randint(2,50)
+            flamePixels[i][3] = random.randint(1,12)
+        pixels[i] = (flamePixels[i][0], flamePixels[i][1], flamePixels[i][2])
+    pixels.show()
+
+#even though the mic isn't connected, when I remove this line, things don't work, so i keep it in...
 mic = audiobusio.PDMIn(clock_pin=board.GP3, data_pin=board.GP2,mono=True, sample_rate=16000, bit_depth=16)
 
 btn = DigitalInOut(board.GP9)
@@ -99,7 +114,7 @@ def wheel(pos):
     return (pos * 3, 0, 255 - pos * 3)
 
 pressed = False
-animationMode = 1
+animationMode = 0
 step = 0
 RED = (255, 0, 0)
 YELLOW = (255, 150, 0)
@@ -113,6 +128,10 @@ chase = Chase(pixels, speed=0.1, color=WHITE, size=3, spacing=6)
 comet = Comet(pixels, speed=0.02, color=PURPLE, tail_length=10, bounce=True)
 pulse = Pulse(pixels, speed=0.1, color=AMBER, period=3)
 
+flamePixels = []
+for i in range(pixelCount):
+    flamePixels.append([100,10,10,5])
+
 
 while True:
     if btn.value == False:
@@ -123,12 +142,15 @@ while True:
             step = 0
 
             if animationMode > 10:
-                animationMode = 1
+                animationMode = 0
 
             print("PRESSED!  Animation mode ", animationMode)
             time.sleep(0.2)
     else:
         pressed = False
+    
+    if (animationMode == 0):
+        runFireAnimation()
 
     if (animationMode == 1):
         step = step + 1
