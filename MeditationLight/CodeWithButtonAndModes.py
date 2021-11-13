@@ -8,17 +8,9 @@ import audiocore
 import random
 import array
 import math
-from adafruit_led_animation.animation.colorcycle import ColorCycle
-from adafruit_led_animation.color import MAGENTA, ORANGE, TEAL
-from adafruit_led_animation.animation.chase import Chase
-from adafruit_led_animation.color import WHITE
-from adafruit_led_animation.animation.comet import Comet
-from adafruit_led_animation.color import PURPLE
-from adafruit_led_animation.animation.pulse import Pulse
-from adafruit_led_animation.color import AMBER
 
 print("loading")
-pixelCount = 51
+pixelCount = 7
 
 #code for meditation light
 breathDirection = 1
@@ -38,7 +30,7 @@ def meditation():
     transitionPercent = transitionPercent + 100/86
     if (brightness > maxBrightness):
         breathDirection = -1
-
+        
     if (brightness < minBrightness):
         breathDirection = 1
         transitionPercent = 0
@@ -60,28 +52,11 @@ def meditation():
     pixels.show()
     time.sleep(.07)
 
-def runFireAnimation():
-    for i in range(pixelCount):
-        flamePixels[i][0] = flamePixels[i][0] + flamePixels[i][3]
-        flamePixels[i][1] = flamePixels[i][1] + flamePixels[i][3]/5
-        flamePixels[i][2] = flamePixels[i][2] + flamePixels[i][3]/5
-        #if we are over 255 in the red, then assign a new set of random flicker values
-        if (flamePixels[i][0] > 255):
-            flamePixels[i][0] = random.randint(25,100)
-            flamePixels[i][1] = random.randint(2,50)
-            flamePixels[i][2] = random.randint(2,50)
-            flamePixels[i][3] = random.randint(1,12)
-        pixels[i] = (flamePixels[i][0], flamePixels[i][1], flamePixels[i][2])
-    pixels.show()
-
-#even though the mic isn't connected, when I remove this line, things don't work, so i keep it in...
-mic = audiobusio.PDMIn(clock_pin=board.GP3, data_pin=board.GP2,mono=True, sample_rate=16000, bit_depth=16)
-
-btn = DigitalInOut(board.GP9)
+btn = DigitalInOut(board.GP6)
 btn.direction = Direction.INPUT
 btn.pull = Pull.UP
 
-pixels = neopixel.NeoPixel(board.GP5, pixelCount, brightness=.3, auto_write=False)
+pixels = neopixel.NeoPixel(board.GP1, pixelCount, brightness=.3, auto_write=False)
 
 def rainbow_cycle(wait, step):
     j = step
@@ -90,15 +65,6 @@ def rainbow_cycle(wait, step):
         pixels[i] = wheel(rc_index & 255)
     pixels.show()
     time.sleep(wait)
-
-def bounceAnimation():
-    comet.animate()
-
-def chaseAnimation():
-    chase.animate()
-
-def pulseAnimation():
-    pulse.animate()
 
 def wheel(pos):
     # Input a value 0 to 255 to get a color value.
@@ -113,8 +79,23 @@ def wheel(pos):
     pos -= 170
     return (pos * 3, 0, 255 - pos * 3)
 
+def runFireAnimation():
+    for i in range(pixelCount):
+        flamePixels[i][0] = flamePixels[i][0] + flamePixels[i][3]
+        flamePixels[i][1] = flamePixels[i][1] + flamePixels[i][3]/5
+        flamePixels[i][2] = flamePixels[i][2] + flamePixels[i][3]/5
+        #if we are over 255 in the red, then assign a new set of random flicker values
+        if (flamePixels[i][0] > 255):
+            flamePixels[i][0] = random.randint(25,100)
+            flamePixels[i][1] = random.randint(2,50)
+            flamePixels[i][2] = random.randint(2,50)
+            flamePixels[i][3] = random.randint(1,12)
+        pixels[i] = (flamePixels[i][0], flamePixels[i][1], flamePixels[i][2])
+    pixels.show()
+    
+
 pressed = False
-animationMode = 0
+animationMode = 1
 step = 0
 RED = (255, 0, 0)
 YELLOW = (255, 150, 0)
@@ -124,14 +105,10 @@ BLUE = (0, 0, 255)
 PURPLE = (180, 0, 255)
 WHITE = (255, 255, 255)
 OFF = (0, 0, 0)
-chase = Chase(pixels, speed=0.1, color=WHITE, size=3, spacing=6)
-comet = Comet(pixels, speed=0.02, color=PURPLE, tail_length=10, bounce=True)
-pulse = Pulse(pixels, speed=0.1, color=AMBER, period=3)
 
-flamePixels = []
-for i in range(pixelCount):
-    flamePixels.append([100,10,10,5])
-
+flamePixels = [
+[100,10,10,5],[100,10,10,5],[100,10,10,5],[100,10,10,5],[100,10,10,5],[100,10,10,5],[100,10,10,5]
+]
 
 while True:
     if btn.value == False:
@@ -142,24 +119,22 @@ while True:
             step = 0
 
             if animationMode > 10:
-                animationMode = 0
+                animationMode = 1
 
             print("PRESSED!  Animation mode ", animationMode)
             time.sleep(0.2)
     else:
         pressed = False
-    
-    if (animationMode == 0):
-        runFireAnimation()
 
     if (animationMode == 1):
         step = step + 1
         if step > 255:
             step = 1
         rainbow_cycle(0.05, step) # Increase the number to slow down the rainbow.
-
+    
     if (animationMode == 2):
-        bounceAnimation()
+        runFireAnimation()
+        time.sleep(0.05)
 
     if (animationMode == 3):
         meditation()
@@ -188,6 +163,3 @@ while True:
         pixels.fill((0,0,0))
         pixels.show()
         time.sleep(0.1)
-
-    if (animationMode == 9):
-        chaseAnimation()
