@@ -2,9 +2,6 @@ import board
 import neopixel
 import time
 from digitalio import DigitalInOut, Direction, Pull
-import analogio
-import audiobusio
-import audiocore
 import random
 import array
 import math
@@ -18,7 +15,7 @@ from adafruit_led_animation.animation.pulse import Pulse
 from adafruit_led_animation.color import AMBER
 
 print("loading")
-pixelCount = 51
+pixelCount = 34
 
 #code for meditation light
 breathDirection = 1
@@ -74,14 +71,12 @@ def runFireAnimation():
         pixels[i] = (flamePixels[i][0], flamePixels[i][1], flamePixels[i][2])
     pixels.show()
 
-#even though the mic isn't connected, when I remove this line, things don't work, so i keep it in...
-mic = audiobusio.PDMIn(clock_pin=board.GP3, data_pin=board.GP2,mono=True, sample_rate=16000, bit_depth=16)
 
-btn = DigitalInOut(board.GP9)
+btn = DigitalInOut(board.GP2)
 btn.direction = Direction.INPUT
 btn.pull = Pull.UP
 
-pixels = neopixel.NeoPixel(board.GP5, pixelCount, brightness=.3, auto_write=False)
+pixels = neopixel.NeoPixel(board.GP0, pixelCount, brightness=.3, auto_write=False)
 
 def rainbow_cycle(wait, step):
     j = step
@@ -130,7 +125,7 @@ pulse = Pulse(pixels, speed=0.1, color=AMBER, period=3)
 
 flamePixels = []
 for i in range(pixelCount):
-    flamePixels.append([100,10,10,5])
+    flamePixels.append([100,10,10,random.randint(2,15)])
 
 
 while True:
@@ -141,7 +136,7 @@ while True:
             animationMode = animationMode + 1
             step = 0
 
-            if animationMode > 10:
+            if animationMode > 9:
                 animationMode = 0
 
             print("PRESSED!  Animation mode ", animationMode)
@@ -151,6 +146,7 @@ while True:
     
     if (animationMode == 0):
         runFireAnimation()
+        time.sleep(0.05)
 
     if (animationMode == 1):
         step = step + 1
